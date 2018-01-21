@@ -37,19 +37,49 @@ uniform float u_Time;
 float fbm(const in vec3 uv);
 float noise(in vec3 p);
 
+out float snow_cap;
+
+float rand(float n){return fract(sin(n) * 43758.5453123);}
+float noise(float p){
+	float fl = floor(p);
+  float fc = fract(p);
+	return mix(rand(fl), rand(fl + 1.0), fc);
+}
 
 void main()
 {
+// crater threshold
+        float s = 0.6;
+float t1 = noise(vec3(fs_Nor) * 2.0) - s;
+float t2 = noise((vec3(fs_Nor) + 800.0) * 2.0) - s;
+float t3 = noise((vec3(fs_Nor) + 1600.0) * 2.0) - s;
+float threshold = max(t1 * t2 * t3, 0.0);
+float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
+
     fs_Col = vs_Col; 
     fs_Pos = vs_Pos;                
 
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);  
+    float height = pow(1.0 - fbm(vec3(vs_Pos) * 4.0), 3.0) * 0.18 + 0.42;
+    //float height = fbm(vec3(vs_Pos) + vec3(vs_Nor));
 
-    float height = fbm(vec3(vs_Pos));
-    vec4 newPos = vs_Pos + (vs_Nor * height);
+vec4 newPos;
+if(abs(threshold) < 5.0) {
+     newPos = vs_Pos + (vs_Nor * height);  
+} else {
+     //newPos = vs_Pos + (vs_Nor * height);  
+     newPos = vs_Pos - (vs_Nor * threshold);
+    }
+     //newPos = vs_Pos + (vs_Nor * height);  
+    
+    if(height < 5.0) {
+        snow_cap = -1.0;
+    } else {
+        snow_cap = 1.0;
+    }
 
-    vec4 modelposition = u_Model * vs_Pos;  
+    vec4 modelposition = u_Model * newPos;  
 
     fs_LightVec = lightPos - modelposition; 
 
