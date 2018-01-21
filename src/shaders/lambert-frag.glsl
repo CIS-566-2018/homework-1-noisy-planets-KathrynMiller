@@ -103,13 +103,12 @@ float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
     float fbm = fbm(uv);
     float det = mod(uv.y * 50.0 * fbm, 8.0);
     vec4 color = vec4(planetCol[int(det)], 1.0); 
-
+    //color = vec4(getRingColor(uv.xy), 1.0);
     //map point to 2d space then to a grid 
     vec2 uvPoint = sphereToUV(vec3(fs_Pos));
     vec2 point = PixelToGrid(uvPoint, 10.0);
     // lower left coordinate
     vec2 lowerLeft = vec2(floor(point.x), floor(point.y));
-
     float numCraters = 20.0;
     for(float i = 0.0; i < numCraters; i++) {
         vec2 craterCenter = vec2(noise(i), rand(i));
@@ -117,19 +116,14 @@ float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
         vec2 craterCenter2 = vec2(rand(i * sin(i)), rand(i * 20.0 * cos(i * 45.0)));
         float radius2 = noise(sin(i * 30.0) * cos(i * 20.0) * .1);
         if(length(uvPoint - craterCenter) < radius || length(uvPoint - craterCenter2) < radius2) {
-            color = vec4(0.0, 0.0, 0.0, 1.0);
+           // color = color - vec4(.2, .2, .2, .1);
         }
     }
-
-
-if(snow_cap > 0.0) {
-    color = mix(vec4(c7, 1.0), color, .01);
-}
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
         // Avoid negative lighting values
          diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
-         float ambientTerm = 0.3;
+         float ambientTerm = 0.2;
         float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.

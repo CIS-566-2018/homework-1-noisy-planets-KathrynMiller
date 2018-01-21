@@ -46,6 +46,30 @@ float noise(float p){
 	return mix(rand(fl), rand(fl + 1.0), fc);
 }
 
+
+const float PI = 3.14159265359;
+const float TWO_PI = 6.28318530718;
+
+vec2 sphereToUV(vec3 p)
+{
+    float phi = atan(p.z, p.x); // Returns atan(z/x)
+    if(phi < 0.0)
+    {
+        phi += TWO_PI; // [0, TWO_PI] range now
+    }
+    // ^^ Could also just add PI to phi, but this shifts where the UV loop from X = 1 to Z = -1.
+    float theta = acos(p.y); // [0, PI]
+    return vec2(1.0 - phi / TWO_PI, 1.0 - theta / PI);
+}
+
+vec2 PixelToGrid(vec2 pixel, float size)
+{
+    vec2 uv = pixel.xy;
+    // Determine number of cells (NxN)
+    uv *= size;
+    return uv;
+}
+
 void main()
 {
 // crater threshold
@@ -61,24 +85,25 @@ float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
 
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);  
-    float height = pow(1.0 - fbm(vec3(vs_Pos) * 4.0), 3.0) * 0.18 + 0.42;
+    float height = pow(1.0 - fbm(vec3(vs_Pos) * 4.0), 3.0) * 0.1 + 0.42;
     //float height = fbm(vec3(vs_Pos) + vec3(vs_Nor));
-
-vec4 newPos;
-if(abs(threshold) < 5.0) {
-     newPos = vs_Pos + (vs_Nor * height);  
-} else {
-     //newPos = vs_Pos + (vs_Nor * height);  
-     newPos = vs_Pos - (vs_Nor * threshold);
+    vec4 newPos = vs_Pos + (vs_Nor * height);  
+    //map point to 2d space then to a grid 
+    vec2 uvPoint = sphereToUV(vec3(fs_Pos));
+    vec2 point = PixelToGrid(uvPoint, 10.0);
+    // lower left coordinate
+    vec2 lowerLeft = vec2(floor(point.x), floor(point.y));
+    float numCraters = 20.0;
+    for(float i = 0.0; i < numCraters; i++) {
+        vec2 craterCenter = vec2(noise(i), rand(i));
+        float radius = noise(sin(i * 63.0) * .07);
+        vec2 craterCenter2 = vec2(rand(i * sin(i)), rand(i * 20.0 * cos(i * 45.0)));
+        float radius2 = noise(sin(i * 30.0) * cos(i * 20.0) * .1);
+        if(length(uvPoint - craterCenter) < radius || length(uvPoint - craterCenter2) < radius2) {
+            newPos = vs_Pos + .4 * vs_Nor;// - (.025 * vs_Nor);
+            fs_Nor = vec4(normalize(mix((vec3(fs_LightVec) + 1.0 * vec3(vs_Nor) - vec3(vs_Pos)), vec3(vs_Nor), 1.0)), 1.0);
+        } 
     }
-     //newPos = vs_Pos + (vs_Nor * height);  
-    
-    if(height < 5.0) {
-        snow_cap = -1.0;
-    } else {
-        snow_cap = 1.0;
-    }
-
     vec4 modelposition = u_Model * newPos;  
 
     fs_LightVec = lightPos - modelposition; 
