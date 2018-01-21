@@ -19,6 +19,7 @@ const controls = {
 };
 
 let icosphere: Icosphere;
+let skyBox: Icosphere;
 let square: Square;
 let cube: Cube;
 let time: number = 0;
@@ -27,8 +28,10 @@ let currShader: ShaderProgram;
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, 6);
   icosphere.create();
-  cube = new Cube(vec3.fromValues(0, 0, 0));
-  cube.create();
+  skyBox = new Icosphere(vec3.fromValues(0, 0, 0), 100, 6);
+  skyBox.create();
+  square = new Square(vec3.fromValues(0, 0, 0));
+  square.create();
 }
 
 function main() {
@@ -72,46 +75,32 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
-  const extra = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/extra-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/extra-frag.glsl')),
+  const sky = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/sky-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/sky-frag.glsl')),
   ])
 
-  currShader = lambert;
   // initialize time in shader
-  currShader.setTime(time);
+  sky.setTime(time);
   time++;
   
   // This function will be called every frame
   function tick() {
     camera.update();
 
-    shaderSwitch.onChange(function(value: boolean) {
-      if(value == false) {
-        currShader = lambert;
-        console.log("LAMBERT");
-      } else {
-        currShader = extra;
-        console.log("EXTRA");
-      }
-
-    });
-    extra.setTime(time);
+    sky.setTime(time);
     time++;
-
-    //set color of current shader
-    currShader.setGeometryColor(vec4.fromValues(controls.color[0]/255.0,controls.color[1]/255.0, controls.color[2]/255.0, 1.0));
-
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
   
-    renderer.render(camera, currShader, [
-       icosphere,
-      //square,
-      //cube,
+    renderer.render(camera, lambert, [
+       icosphere
     ]);
+    renderer.render(camera, sky, [
+     skyBox,
+   ]);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
