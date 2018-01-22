@@ -20,9 +20,9 @@ in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec4 fs_Pos;
 uniform float u_Time;
-in float snow_cap;
-
-uniform float u_lightDir;
+in vec4 fs_lightPos;
+uniform float u_craterRad;
+uniform float u_craterSize;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -83,21 +83,10 @@ float ridgedNoise(vec3 position, int octaves, float frequency, float persistence
 void main()
 {
     vec3 uv = vec3(fs_Pos);
-    // calculate threshold for "storm dots" and calculate it in with noise n
-        float s = 0.6;
-float t1 = noise(vec3(fs_Nor) * 2.0) - s;
-float t2 = noise((vec3(fs_Nor) + 800.0) * 2.0) - s;
-float t3 = noise((vec3(fs_Nor) + 1600.0) * 2.0) - s;
-float threshold = max(t1 * t2 * t3, 0.0);
-float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
-
-    float n1 = noise(vec3(fs_Nor), 6, 10.0, 0.8) * 0.01;
-    float n2 = ridgedNoise(vec3(fs_Nor), 5, 5.8, 0.75) * 0.015 - 0.01;
-    float n = n1 + n2 + n3;
 
     float fbm = fbm(uv);
     float det = mod(uv.y * 50.0 * fbm, 8.0);
-    vec4 color = vec4(planetCol[int(det)], 1.0); 
+    vec4 color = vec4(planetCol[int(det) ], 1.0); 
     // get rid of weird straight line at 0
     if(fs_Pos.y <  .03 && fs_Pos.y >=  0.0) {
         color = mix(vec4(c8, 1.0), vec4(c1, 1.0), (uv.y) / .03);
@@ -111,9 +100,15 @@ float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
         float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
+        float specularIntensity = 0.0;
+        vec4 H = normalize((fs_lightPos + fs_LightVec)/2.0);
+        // limit blinn phong to lightest color and side of sphere near light source
+        if(vec3(color) == c7 && length(fs_lightPos - fs_Pos) < 7.5) {
+             specularIntensity = max(pow(dot(H, fs_Nor), 2.0), 0.0);
+        }
 
         // Compute final shaded color
-        out_Col = vec4(color.rgb * lightIntensity, color.a);
+        out_Col = vec4(color.rgb * (specularIntensity + lightIntensity), color.a);
 
 }
 

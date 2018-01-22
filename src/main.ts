@@ -13,9 +13,8 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   lightDirection: 0,
-  'Load Scene': loadScene, // A function pointer, essentially
-  color : [219, 10, 91],
-  funShader : false,
+  craterSize: 1,
+  craterDensity: 1
 };
 
 let clouds: Icosphere;
@@ -49,8 +48,8 @@ function main() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   var lightDir = gui.add(controls, 'lightDirection', 0.0, 360.0);
-  var color = gui.addColor(controls, 'color');
-  var shaderSwitch = gui.add(controls, 'funShader');
+  var craterSize = gui.add(controls, 'craterSize', 1.0, 2.0);
+  var craterDensity = gui.add(controls, 'craterDensity', 1.0, 4.0); 
  
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -93,6 +92,8 @@ function main() {
   // initialize time in shader
   cloud.setTime(time);
   lambert.setTime(time);
+  lambert.setCraterNum(1.0);
+  lambert.setCraterRad(1.0);
   sky.setTime(time);
   time++;
   
@@ -110,6 +111,10 @@ function main() {
     cloud.setLightDir(radians);
     lambert.setLightDir(radians);
     sky.setLightDir(radians);
+
+    //set crater attributes
+    lambert.setCraterNum(controls.craterDensity.valueOf());
+    lambert.setCraterRad(controls.craterSize.valueOf());
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);

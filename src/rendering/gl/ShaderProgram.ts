@@ -31,6 +31,8 @@ class ShaderProgram {
   unifColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifLight: WebGLUniformLocation;
+  unifCraterRad: WebGLUniformLocation;
+  unifCraterNum: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -52,6 +54,8 @@ class ShaderProgram {
     this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
     this.unifTime      = gl.getUniformLocation(this.prog, "u_Time");
     this.unifLight      = gl.getUniformLocation(this.prog, "u_lightDir");
+    this.unifCraterNum      = gl.getUniformLocation(this.prog, "u_craterNum");
+    this.unifCraterRad     = gl.getUniformLocation(this.prog, "u_craterRad");
   }
 
   use() {
@@ -93,6 +97,20 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, time);
+    }
+  }
+
+  setCraterRad(r: number) {
+    this.use();
+    if (this.unifCraterRad !== -1) {
+      gl.uniform1f(this.unifCraterRad, r);
+    }
+  }
+
+  setCraterNum(s: number) {
+    this.use();
+    if (this.unifCraterNum !== -1) {
+      gl.uniform1f(this.unifCraterNum, s);
     }
   }
 

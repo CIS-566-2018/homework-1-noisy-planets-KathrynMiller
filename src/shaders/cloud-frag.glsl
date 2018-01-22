@@ -23,7 +23,7 @@ float noise(in vec3 p);
 void main()
 {
 vec4 diffuseColor = cloudCol;
-    float height = fbm(vec3(fs_Pos) * cos(u_Time * .0002));// + vec3(noise(fs_Pos.xyz)));
+    float height = fbm(vec3(fs_Pos) * cos(u_Time * .0004));// + vec3(noise(fs_Pos.xyz)));
     if(height > .2) {
         out_Col = cloudCol;
     } else {
