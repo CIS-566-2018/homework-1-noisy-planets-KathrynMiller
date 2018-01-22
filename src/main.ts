@@ -12,12 +12,13 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  tesselations: 5,
+  lightDirection: 0,
   'Load Scene': loadScene, // A function pointer, essentially
   color : [219, 10, 91],
   funShader : false,
 };
 
+let clouds: Icosphere;
 let icosphere: Icosphere;
 let skyBox: Icosphere;
 let square: Square;
@@ -28,6 +29,8 @@ let currShader: ShaderProgram;
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, 6);
   icosphere.create();
+  clouds = new Icosphere(vec3.fromValues(0, 0, 0), 1.1, 6);
+  clouds.create();
   skyBox = new Icosphere(vec3.fromValues(0, 0, 0), 100, 6);
   skyBox.create();
   square = new Square(vec3.fromValues(0, 0, 0));
@@ -45,8 +48,7 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.add(controls, 'Load Scene');
+  var lightDir = gui.add(controls, 'lightDirection', 0.0, 360.0);
   var color = gui.addColor(controls, 'color');
   var shaderSwitch = gui.add(controls, 'funShader');
  
@@ -68,6 +70,8 @@ function main() {
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
  
   const lambert = new ShaderProgram([
@@ -75,12 +79,20 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
+  const cloud = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/cloud-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/cloud-frag.glsl')),
+  ]);
+
   const sky = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/sky-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/sky-frag.glsl')),
   ])
+  
 
   // initialize time in shader
+  cloud.setTime(time);
+  lambert.setTime(time);
   sky.setTime(time);
   time++;
   
@@ -88,8 +100,16 @@ function main() {
   function tick() {
     camera.update();
 
+    cloud.setTime(time);
+    lambert.setTime(time);
     sky.setTime(time);
     time++;
+
+    let angle: number = controls.lightDirection.valueOf();
+    let radians: number = angle * 3.14159 / 180.0
+    cloud.setLightDir(radians);
+    lambert.setLightDir(radians);
+    sky.setLightDir(radians);
 
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -98,6 +118,9 @@ function main() {
     renderer.render(camera, lambert, [
        icosphere
     ]);
+    renderer.render(camera, cloud, [
+     // clouds
+   ]);
     renderer.render(camera, sky, [
      skyBox,
    ]);

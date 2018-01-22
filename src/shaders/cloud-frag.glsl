@@ -14,20 +14,21 @@ uniform float u_Time;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
-const vec4 skyBase = vec4(18.0 / 255.0, 16.0 / 255.0, 25.0 / 255.0, 1.0);
-const vec4 star = vec4(161.0 / 255.0, 159.0 / 255.0, 181.0 / 255.0, 1.0);
+const vec4 cloudCol = vec4(.6, .6, .6, .5);
+const vec4 clear = vec4(0.0, 0.0, 0.0, 0.0);
 
 float fbm(const in vec3 uv);
+float noise(in vec3 p);
 
 void main()
 {
-vec4 diffuseColor = skyBase;
-    float height = fbm(vec3(fs_Pos) * cos(u_Time * .00002));
-    if(height > .45) {
-        diffuseColor = star;
+vec4 diffuseColor = cloudCol;
+    float height = fbm(vec3(fs_Pos) * cos(u_Time * .0002));// + vec3(noise(fs_Pos.xyz)));
+    if(height > .2) {
+        out_Col = cloudCol;
+    } else {
+        out_Col = clear;
     }
-out_Col = diffuseColor;
-   //out_Col = mix(diffuseColor, skyBase, sin(u_Time * .2));
 }
 
 float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
@@ -58,16 +59,16 @@ float noise(in vec3 p){
 
 float fbm(const in vec3 uv)
 {
-    float a = 0.3;
-    float f = 9.0;
+    float a = .2;
+    float f = 7.0;
     float n = 0.;
-    int it = 8;
+    int it = 10;
     for(int i = 0; i < 32; i++)
     {
         if(i<it)
         {
             n += noise(uv*f)*a;
-            a *= .5;
+            a *= .4;
             f *= 2.;
         }
     }

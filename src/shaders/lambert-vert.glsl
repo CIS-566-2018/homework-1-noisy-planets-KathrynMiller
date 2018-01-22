@@ -32,6 +32,7 @@ out vec4 fs_Pos;
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
 
+uniform float u_lightDir;
 uniform float u_Time;
 
 float fbm(const in vec3 uv);
@@ -72,28 +73,20 @@ vec2 PixelToGrid(vec2 pixel, float size)
 
 void main()
 {
-// crater threshold
-        float s = 0.6;
-float t1 = noise(vec3(fs_Nor) * 2.0) - s;
-float t2 = noise((vec3(fs_Nor) + 800.0) * 2.0) - s;
-float t3 = noise((vec3(fs_Nor) + 1600.0) * 2.0) - s;
-float threshold = max(t1 * t2 * t3, 0.0);
-float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
-
-    fs_Col = vs_Col; 
+   fs_Col = vs_Col; 
     fs_Pos = vs_Pos;                
 
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);  
     float height = pow(1.0 - fbm(vec3(vs_Pos) * 4.0), 3.0) * 0.1 + 0.42;
-    //float height = fbm(vec3(vs_Pos) + vec3(vs_Nor));
     vec4 newPos = vs_Pos + (vs_Nor * height);  
+    
     //map point to 2d space then to a grid 
     vec2 uvPoint = sphereToUV(vec3(fs_Pos));
     vec2 point = PixelToGrid(uvPoint, 10.0);
     // lower left coordinate
     vec2 lowerLeft = vec2(floor(point.x), floor(point.y));
-    float numCraters = 20.0;
+    float numCraters = 40.0;
     for(float i = 0.0; i < numCraters; i++) {
         vec2 craterCenter = vec2(noise(i), rand(i));
         float radius = noise(sin(i * 63.0) * .07);
@@ -106,7 +99,13 @@ float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
     }
     vec4 modelposition = u_Model * newPos;  
 
-    fs_LightVec = lightPos - modelposition; 
+
+    mat4 rot = mat4(vec4(cos(u_lightDir), 0.0, sin(u_lightDir), 0.0),
+    
+    vec4(0.0, 1.0, 0.0, 0.0),
+    vec4(-sin(u_lightDir), 0.0, cos(u_lightDir), 0.0),
+    vec4(0.0, 0.0, 0.0, 1.0));
+    fs_LightVec = (rot * lightPos) - modelposition; 
 
     gl_Position = u_ViewProj * modelposition;
 

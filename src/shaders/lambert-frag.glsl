@@ -22,6 +22,8 @@ in vec4 fs_Pos;
 uniform float u_Time;
 in float snow_cap;
 
+uniform float u_lightDir;
+
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 //returns base color based on y value
@@ -81,13 +83,6 @@ float ridgedNoise(vec3 position, int octaves, float frequency, float persistence
 void main()
 {
     vec3 uv = vec3(fs_Pos);
-    if(abs(fs_Pos.y) <  0.001) {
-        float f = mod(fs_Pos.x, 2.0);
-        f = mod(noise(f), 2.0);
-        if(f == 1.0) {
-            uv.y = -.9;
-        } 
-    }
     // calculate threshold for "storm dots" and calculate it in with noise n
         float s = 0.6;
 float t1 = noise(vec3(fs_Nor) * 2.0) - s;
@@ -103,22 +98,11 @@ float n3 = noise(vec3(fs_Nor) * 0.1) * threshold;
     float fbm = fbm(uv);
     float det = mod(uv.y * 50.0 * fbm, 8.0);
     vec4 color = vec4(planetCol[int(det)], 1.0); 
-    //color = vec4(getRingColor(uv.xy), 1.0);
-    //map point to 2d space then to a grid 
-    vec2 uvPoint = sphereToUV(vec3(fs_Pos));
-    vec2 point = PixelToGrid(uvPoint, 10.0);
-    // lower left coordinate
-    vec2 lowerLeft = vec2(floor(point.x), floor(point.y));
-    float numCraters = 20.0;
-    for(float i = 0.0; i < numCraters; i++) {
-        vec2 craterCenter = vec2(noise(i), rand(i));
-        float radius = noise(sin(i * 63.0) * .07);
-        vec2 craterCenter2 = vec2(rand(i * sin(i)), rand(i * 20.0 * cos(i * 45.0)));
-        float radius2 = noise(sin(i * 30.0) * cos(i * 20.0) * .1);
-        if(length(uvPoint - craterCenter) < radius || length(uvPoint - craterCenter2) < radius2) {
-           // color = color - vec4(.2, .2, .2, .1);
-        }
+    // get rid of weird straight line at 0
+    if(fs_Pos.y <  .03 && fs_Pos.y >=  0.0) {
+        color = mix(vec4(c8, 1.0), vec4(c1, 1.0), (uv.y) / .03);
     }
+
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
         // Avoid negative lighting values
