@@ -14,7 +14,8 @@ uniform float u_Time;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
-const vec4 cloudCol = vec4(.6, .6, .6, .5);
+//const vec4 cloudCol = vec4(.6, .6, .6, .5);
+const vec4 cloudCol = vec4(198.0 / 255.0, 208.0 / 255.0, 229.0 / 255.0, .3);
 const vec4 clear = vec4(0.0, 0.0, 0.0, 0.0);
 
 float fbm(const in vec3 uv);
@@ -22,13 +23,20 @@ float noise(in vec3 p);
 
 void main()
 {
-vec4 diffuseColor = cloudCol;
+        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
+         diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
+         float ambientTerm = 0.2;
+        float lightIntensity = diffuseTerm + ambientTerm;
+        
+    vec4 diffuseColor = cloudCol;
     float height = fbm(vec3(fs_Pos) * cos(u_Time * .0004));// + vec3(noise(fs_Pos.xyz)));
     if(height > .2) {
-        out_Col = cloudCol;
+        diffuseColor = cloudCol;
     } else {
-        out_Col = clear;
+        diffuseColor = clear;
     }
+    // Compute final shaded color
+        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
 }
 
 float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}

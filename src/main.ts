@@ -14,7 +14,8 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   lightDirection: 0,
   craterSize: 1,
-  craterDensity: 1
+  craterDensity: 1,
+  showClouds: false
 };
 
 let clouds: Icosphere;
@@ -50,6 +51,7 @@ function main() {
   var lightDir = gui.add(controls, 'lightDirection', 0.0, 360.0);
   var craterSize = gui.add(controls, 'craterSize', 1.0, 2.0);
   var craterDensity = gui.add(controls, 'craterDensity', 1.0, 4.0); 
+  var showClouds = gui.add(controls, 'showClouds', false);
  
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -123,9 +125,12 @@ function main() {
     renderer.render(camera, lambert, [
        icosphere
     ]);
-    renderer.render(camera, cloud, [
-     // clouds
-   ]);
+    // show clouds based on gui selection
+    if(controls.showClouds.valueOf() == true) {
+      renderer.render(camera, cloud, [
+        clouds
+      ]);
+  }
     renderer.render(camera, sky, [
      skyBox,
    ]);

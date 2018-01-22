@@ -21,45 +21,12 @@ in vec4 fs_Col;
 in vec4 fs_Pos;
 uniform float u_Time;
 in vec4 fs_lightPos;
-uniform float u_craterRad;
-uniform float u_craterSize;
+
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 //returns base color based on y value
 vec3 getRingColor(vec2 uv);
-
-const float PI = 3.14159265359;
-const float TWO_PI = 6.28318530718;
-
-vec2 sphereToUV(vec3 p)
-{
-    float phi = atan(p.z, p.x); // Returns atan(z/x)
-    if(phi < 0.0)
-    {
-        phi += TWO_PI; // [0, TWO_PI] range now
-    }
-    // ^^ Could also just add PI to phi, but this shifts where the UV loop from X = 1 to Z = -1.
-    float theta = acos(p.y); // [0, PI]
-    return vec2(1.0 - phi / TWO_PI, 1.0 - theta / PI);
-}
-
-vec2 PixelToGrid(vec2 pixel, float size)
-{
-    vec2 uv = pixel.xy;
-    // Determine number of cells (NxN)
-    uv *= size;
-    return uv;
-}
-
-const vec4 tan = vec4(145.0 / 255.0, 121.0 / 255.0, 80.0 / 255.0, 1.0);
-const vec4 light_tan = vec4(172.0 / 255.0, 167.0 / 255.0, 147.0 / 255.0, 1.0);
-const vec4 light_blue = vec4(182.0 / 255.0, 203.0 / 255.0, 200.0 / 255.0, 1.0);
-const vec4 grey_blue = vec4(116.0 / 255.0, 138.0 / 255.0, 130.0 / 255.0, 1.0);
-const vec4 gold = vec4(190.0 / 255.0, 122.0 / 255.0, 17.0 / 255.0, 1.0);
-const vec4 brown = vec4(92.0 / 255.0, 66.0 / 255.0, 22.0 / 255.0, 1.0);
-const vec4 med_blue = vec4(89.0 / 255.0, 141.0 / 255.0, 151.0 / 255.0, 1.0);
-const vec4 yellow = vec4(246.0 / 255.0, 154.0 / 255.0, 14.0 / 255.0, 1.0);
 
 const vec3 c1 = vec3(161.0 / 255.0, 159.0 / 255.0, 181.0 / 255.0);
 const vec3 c2 = vec3(163.0 / 255.0, 178.0 / 255.0, 195.0 / 255.0);
@@ -77,8 +44,7 @@ float rand(float n);
 float fbm(const in vec3 uv);
 float noise(in vec3 p);
 float noise(float p);
-float noise(vec3 position, int octaves, float frequency, float persistence);
-float ridgedNoise(vec3 position, int octaves, float frequency, float persistence);
+
 
 void main()
 {
@@ -118,51 +84,6 @@ float noise(float p){
 	float fl = floor(p);
   float fc = fract(p);
 	return mix(rand(fl), rand(fl + 1.0), fc);
-}
- float noise(vec3 position, int octaves, float frequency, float persistence) {
-    float total = 0.0; // Total value so far
-    float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
-    float amplitude = 1.0;
-    for (int i = 0; i < octaves; i++) {
-
-        // Get the noise sample
-        total += noise(position * frequency) * amplitude;
-
-        // Make the wavelength twice as small
-        frequency *= 2.0;
-
-        // Add to our maximum possible amplitude
-        maxAmplitude += amplitude;
-
-        // Reduce amplitude according to persistence for the next octave
-        amplitude *= persistence;
-    }
-
-    // Scale the result by the maximum amplitude
-    return total / maxAmplitude;
-}
-
-float ridgedNoise(vec3 position, int octaves, float frequency, float persistence) {
-    float total = 0.0; // Total value so far
-    float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
-    float amplitude = 1.0;
-    for (int i = 0; i < octaves; i++) {
-
-        // Get the noise sample
-        total += ((1.0 - abs(noise(position * frequency))) * 2.0 - 1.0) * amplitude;
-
-        // Make the wavelength twice as small
-        frequency *= 2.0;
-
-        // Add to our maximum possible amplitude
-        maxAmplitude += amplitude;
-
-        // Reduce amplitude according to persistence for the next octave
-        amplitude *= persistence;
-    }
-
-    // Scale the result by the maximum amplitude
-    return total / maxAmplitude;
 }
 
 float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
