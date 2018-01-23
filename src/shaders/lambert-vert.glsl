@@ -76,13 +76,14 @@ vec2 PixelToGrid(vec2 pixel, float size)
 
 void main()
 {
-   fs_Col = vs_Col; 
-    fs_Pos = vs_Pos;                
+    vec4 pos = vs_Pos;
+
+    fs_Pos = pos;                
 
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);  
-    float height = pow(1.0 - fbm(vec3(vs_Pos) * 4.0), 3.0) * 0.1 + 0.42;
-    vec4 newPos = vs_Pos + (vs_Nor * height);  
+    float height = pow(1.0 - fbm(vec3(pos) * 4.0), 3.0) * 0.1 + 0.42;
+    vec4 newPos = pos + (vs_Nor * height);  
     
     // make craters
     //map point to 2d space then to a grid 
@@ -97,17 +98,14 @@ void main()
         vec2 craterCenter2 = vec2(rand(i * sin(i)), rand(i * 20.0 * cos(i * 45.0)));
         float radius2 = noise(sin(i * 30.0) * cos(i * 20.0) * .1) * u_craterRad;
         if(length(uvPoint - craterCenter) < radius || length(uvPoint - craterCenter2) < radius2) {
-            newPos = vs_Pos + .4 * vs_Nor;// - (.025 * vs_Nor);
-            fs_Nor = vec4(normalize(mix((vec3(fs_LightVec) + 1.0 * vec3(vs_Nor) - vec3(vs_Pos)), vec3(vs_Nor), 1.0)), 1.0);
+            newPos = pos + .4 * vs_Nor;// - (.025 * vs_Nor);
+            fs_Nor = vec4(normalize(mix((vec3(fs_LightVec) + 1.0 * vec3(vs_Nor) - vec3(pos)), vec3(vs_Nor), 1.0)), 1.0);
         } 
     }
 
-    //float perlin = snoise(vs_Pos.xyz * 1.5);
-    vec3 offset1 = vec3(snoise(vs_Pos.xyz + cos(0.01)), snoise(vs_Pos.xyz + vec3(5.2, 1.3, 1.4)), snoise(vs_Pos.xyz + vec3(5.2, 1.3, 1.4)));
-   // vec2 offset2 = vec2(PerlinNoise(uv + offset1 + vec2(1.7, 9.2)), PerlinNoise(uv + sin(u_Time * 3.14159 * 0.01) + offset1 + vec2(8.3, 2.8)));
-    float perlin = snoise(vs_Pos.xyz + offset1);
+    vec3 offset1 = vec3(snoise(pos.xyz + cos(0.01)), snoise(pos.xyz + vec3(5.2, 1.3, 1.4)), snoise(pos.xyz + vec3(5.2, 1.3, 1.4)));
+    float perlin = snoise(pos.xyz + offset1);
     newPos = vec4(newPos.xyz + vs_Nor.xyz * vec3((perlin + .4) * .06), 1.0);
-    //newPos = vec4(newPos.xyz + vs_Nor.xyz * (vec3(1.0) - vec3(abs(perlin) * .3)), 1.0);
 
     vec4 modelposition = u_Model * newPos;  
 
@@ -120,8 +118,6 @@ void main()
     fs_LightVec = (rot * lightPos) - modelposition; 
 
     gl_Position = u_ViewProj * modelposition;
-
-
                                            
 }
 
