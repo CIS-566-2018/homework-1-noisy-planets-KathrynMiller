@@ -1,6 +1,7 @@
 Name: Kathryn Miller
 Pennkey: kamill
 
+![](planet.png)
 
 Github demo: https://kathrynmiller.github.io/homework-1-noisy-planets-KathrynMiller/index.html 
 
