@@ -51,7 +51,7 @@ void main()
     vec3 uv = vec3(fs_Pos);
 
     float fbm = fbm(uv);
-    float det = mod(cos(uv.y * sin(u_Time * .0001) + cos(u_Time * .0001)) * 80.0 * fbm, 8.0);
+    float det = mod(cos(uv.y * sin(u_Time * .0003) + cos(u_Time * .0003)) * 80.0 * fbm, 8.0);
    // float det = mod(cos(uv.y * u_Time * .01) * 50.0 * fbm, 8.0); // does cool smooshy line thing
     vec4 color = vec4(planetCol[int(det) ], 1.0); 
     // get rid of weird straight line at 0
